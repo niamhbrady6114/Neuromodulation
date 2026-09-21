@@ -8,10 +8,10 @@
 		<div class="collapse navbar-collapse" id="navbarSupportedContent">
 			<ul class="navbar-nav me-auto mb-2 mb-lg-0">
 			<li class="nav-item">
-				<a class="nav-link" aria-current="page" href="/neuromodulation.php">Form</a>
+				<a class="nav-link" aria-current="page" href="/index.php">Form</a>
 			</li>
 			<li class="nav-item">
-				<a class="nav-link" href="/neuromodulation_select.php">Admin</a>
+				<a class="nav-link" href="/admin.php">Admin</a>
 			</li>
 		</div>
 	</div>

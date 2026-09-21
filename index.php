@@ -2,36 +2,14 @@
 
     require_once __DIR__ . '/db.php';  
     
-    $neuromodulation = "";
+
     $messasge = "";
     $messageType = "";
-
-    $id = (isset($_GET['id']) ? $_GET['id']: NULL);
-
-    $tsql = "{call sp_select_neuromodulation (?)}"; 
-    $params = array(
-        array($id, SQLSRV_PARAM_IN)
-    );
-
-    $stmt = sqlsrv_prepare($conn, $tsql, $params); 
-    if ($stmt && sqlsrv_execute($stmt)) {
-
-        $neuromodulation = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC);
-        if ($neuromodulation && $neuromodulation['birth_date'] instanceof DateTime) {
-            $today = new DateTime();
-            $neuromodulation['age'] = $today->diff($neuromodulation['birth_date'])->y;
-            $neuromodulation['birth_date'] = $neuromodulation['birth_date']->format('Y-m-d');
-        }
-    } else {
-        $message = "Error Submitting Form: " . print_r(sqlsrv_errors(), true);
-        $messageType = "danger";
-    }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $action = $_POST['action'] ?? '';
 
-        if ($action === 'update') {
-            $id = trim($_POST['id'] ?? '');
+          if ($action === 'create') {
             $first_name = trim($_POST['first_name'] ?? '');
             $surname = trim($_POST['surname'] ?? '');
             $birth_date = trim($_POST['birth_date'] ?? '');
@@ -49,37 +27,36 @@
             $q11 = trim($_POST['q11'] ?? '');
             $q12 = trim($_POST['q12'] ?? '');
             $total_score = trim($_POST['total_score'] ?? '');
+            $output_id = 0;
 
-           // Parameters to send to store procedure
-            $tsql = "{call sp_update_neuromodulation (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)}";
+            $tsql = "{call sp_insert_neuromodulation (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)}"; 
             $params = array(
                 array($first_name, SQLSRV_PARAM_IN),
                 array($surname, SQLSRV_PARAM_IN),
                 array($birth_date, SQLSRV_PARAM_IN),
-                array((int)$age, SQLSRV_PARAM_IN),
-                array((int)$q1, SQLSRV_PARAM_IN),
-                array((int)$q2, SQLSRV_PARAM_IN),
-                array((int)$q3, SQLSRV_PARAM_IN),
-                array((int)$q4, SQLSRV_PARAM_IN),
-                array((int)$q5, SQLSRV_PARAM_IN),
-                array((int)$q6, SQLSRV_PARAM_IN),
-                array((int)$q7, SQLSRV_PARAM_IN),
-                array((int)$q8, SQLSRV_PARAM_IN),
-                array((int)$q9, SQLSRV_PARAM_IN),
-                array((int)$q10, SQLSRV_PARAM_IN),
-                array((int)$q11, SQLSRV_PARAM_IN),
-                array((int)$q12, SQLSRV_PARAM_IN),
-                array((int)$total_score, SQLSRV_PARAM_IN),
-                array((int)$id, SQLSRV_PARAM_IN)
+                array($age, SQLSRV_PARAM_IN),
+                array($q1, SQLSRV_PARAM_IN),
+                array($q2, SQLSRV_PARAM_IN),
+                array($q3, SQLSRV_PARAM_IN),
+                array($q4, SQLSRV_PARAM_IN),
+                array($q5, SQLSRV_PARAM_IN),
+                array($q6, SQLSRV_PARAM_IN),
+                array($q7, SQLSRV_PARAM_IN),
+                array($q8, SQLSRV_PARAM_IN),
+                array($q9, SQLSRV_PARAM_IN),
+                array($q10, SQLSRV_PARAM_IN),
+                array($q11, SQLSRV_PARAM_IN),
+                array($q12, SQLSRV_PARAM_IN),
+                array($total_score, SQLSRV_PARAM_IN),
+                array(&$output_id, SQLSRV_PARAM_OUT)
             );
 
             $stmt = sqlsrv_prepare($conn, $tsql, $params);
             if ($stmt && sqlsrv_execute($stmt)) {
-                header("Location: /neuromodulation_select.php");
-                $message = "Form Successfully Updated.";
+                $message = "Form Successfully Submitted!";
                 $messageType = "success";
             } else {
-                $message = "Error Updating Form: " . print_r(sqlsrv_errors(), true);
+                $message = "Error Submitting Form: " . print_r(sqlsrv_errors(), true);
                 $messageType = "danger";
             }
             
@@ -142,7 +119,7 @@
                 border-radius: 50%;
                 border: 2px solid #198754;
                 /*  slider progress trick  */
-                box-shadow: -407px 0 0 400px #198754;
+                box-shadow: -507px 0 0 500px #198754;
             }
 
                 /* Thumb: Firefox */
@@ -153,7 +130,7 @@
                 border-radius: 50%;
                 border: 1px solid #198754;
                 /*  slider progress trick  */
-                box-shadow: -407px 0 0 400px #198754;
+                box-shadow: -507px 0 0 500px #198754;
             }
 
         </style>
@@ -169,38 +146,37 @@
                     <?php } ?>
                 </div>
             </div>
-            <form action="neuromodulation_update.php" method="POST">
+            <form action="index.php" method="POST" id="nmod_form">
                 <div class="row justify-content-start">
                     <div class="col-md-8">
-                        <div class="card">
-                             <!-- PATIENT DETAILS -->
+                        <div class="card mb-4">
+                            <!-- PATIENT DETAILS -->
                             <div class="card-header">Patient Details</div>
                             <div class="card-body">
-            
-                                <input type="hidden" name="action" value="update">
-                                <input type="hidden" name="id" value="<?= $neuromodulation["id"] ?>">
+                                
+                                <input type="hidden" name="action" value="create">
 
                                 <div class="row align-items-start">
                                     <div class="col-6">
                                         <label class="form-label" for="first_name">First Name:</label>
-                                        <input class="form-control" type="text" name="first_name" id="first_name" maxlength="50" required value="<?= $neuromodulation["first_name"] ?>">
+                                        <input class="form-control" type="text" name="first_name" id="first_name" maxlength="50" required>
                                     </div>
 
                                     <div class="col-6">
                                         <label class="form-label" for="surname">Surname:</label>
-                                        <input class="form-control" type="text" name="surname" id="surname" maxlength="50" required value="<?= $neuromodulation["surname"] ?>">
+                                        <input class="form-control" type="text" name="surname" id="surname" maxlength="50" required>
                                     </div>
                                 </div>
-                                
+
                                 <div class="row align-items-start pt-3">
                                     <div class="col-6">
                                         <label class="form-label" for="birth_date">Date of Birth:</label>
-                                        <input class="form-control" type="date" name="birth_date" id="birth_date" required value="<?= $neuromodulation["birth_date"] ?? '' ?>">
+                                        <input class="form-control" type="date" name="birth_date" id="birth_date" maxlength="50" required>
                                     </div>
 
                                     <div class="col-6">
                                         <label class="form-label" for="age">Age:</label>
-                                        <input class="form-control" type="text" name="age" id="age" readonly value="<?= $neuromodulation["age"] ?? '' ?>">
+                                        <input class="form-control" type="text" name="age" id="age" readonly>
                                     </div>
                                 </div>
                             </div>
@@ -218,7 +194,7 @@
                                             <span id="q1_slider" class="fw-bold fs-5 ms-2"></span>
                                         </div>
                                         <div class="slidecontainer mt-3 mb-3">
-                                            <input type="range" min="0" max="100" value="<?= $neuromodulation["q1"] ?>" class="slider" id="q1" name="q1" required>
+                                            <input type="range" min="0" max="100" value="0" class="slider" id="q1" name="q1" required>
                                         </div>
                                     </div>
                                 </div>
@@ -230,7 +206,7 @@
                                             <span id="q2_slider" class="fw-bold fs-5 ms-2"></span>
                                         </div>
                                         <div class="slidecontainer mt-3 mb-3">
-                                            <input type="range" min="0" max="10" value="<?= $neuromodulation["q2"] ?>" class="slider" id="q2" name="q2" required>
+                                            <input type="range" min="0" max="10" value="0" class="slider" id="q2" name="q2" required>
                                         </div>
                                     </div>
                                 </div>
@@ -242,7 +218,7 @@
                                             <span id="q3_slider" class="fw-bold fs-5 ms-2"></span>
                                         </div>
                                         <div class="slidecontainer mt-3 mb-3">
-                                            <input type="range" min="0" max="10" value="<?= $neuromodulation["q3"] ?>" class="slider" id="q3" name="q3" required>
+                                            <input type="range" min="0" max="10" value="0" class="slider" id="q3" name="q3" required>
                                         </div>
                                     </div>
                                 </div>
@@ -254,7 +230,7 @@
                                             <span id="q4_slider" class="fw-bold fs-5 ms-2"></span>
                                         </div>
                                         <div class="slidecontainer mt-3 mb-3">
-                                            <input type="range" min="0" max="10" value="<?= $neuromodulation["q4"] ?>" class="slider" id="q4" name="q4" required>
+                                            <input type="range" min="0" max="10" value="0" class="slider" id="q4" name="q4" required>
                                         </div>
                                     </div>
                                 </div>
@@ -266,7 +242,7 @@
                                             <span id="q5_slider" class="fw-bold fs-5 ms-2"></span>
                                         </div>
                                         <div class="slidecontainer mt-3 mb-3">
-                                            <input type="range" min="0" max="10" value="<?= $neuromodulation["q5"] ?>" class="slider" id="q5" name="q5" required>
+                                            <input type="range" min="0" max="10" value="0" class="slider" id="q5" name="q5" required>
                                         </div>
                                     </div>
                                 </div>
@@ -278,7 +254,7 @@
                                             <span id="q6_slider" class="fw-bold fs-5 ms-2"></span>
                                         </div>
                                         <div class="slidecontainer mt-3 mb-3">
-                                            <input type="range" min="0" max="10" value="<?= $neuromodulation["q6"] ?>" class="slider" id="q6" name="q6" required>
+                                            <input type="range" min="0" max="10" value="0" class="slider" id="q6" name="q6" required>
                                         </div>
                                     </div>
                                 </div>
@@ -290,7 +266,7 @@
                                             <span id="q7_slider" class="fw-bold fs-5 ms-2"></span>
                                         </div>
                                         <div class="slidecontainer mt-3 mb-3">
-                                            <input type="range" min="0" max="10" value="<?= $neuromodulation["q7"] ?>" class="slider" id="q7" name="q7" required>
+                                            <input type="range" min="0" max="10" value="0" class="slider" id="q7" name="q7" required>
                                         </div>
                                     </div>
                                 </div>
@@ -302,7 +278,7 @@
                                             <span id="q8_slider" class="fw-bold fs-5 ms-2"></span>
                                         </div>
                                         <div class="slidecontainer mt-3 mb-3">
-                                            <input type="range" min="0" max="10" value="<?= $neuromodulation["q8"] ?>" class="slider" id="q8" name="q8" required>
+                                            <input type="range" min="0" max="10" value="0" class="slider" id="q8" name="q8" required>
                                         </div>
                                     </div>
                                 </div>
@@ -314,7 +290,7 @@
                                             <span id="q9_slider" class="fw-bold fs-5 ms-2"></span>
                                         </div>
                                         <div class="slidecontainer mt-3 mb-3">
-                                            <input type="range" min="0" max="10" value="<?= $neuromodulation["q9"] ?>" class="slider" id="q9" name="q9" required>
+                                            <input type="range" min="0" max="10" value="0" class="slider" id="q9" name="q9" required>
                                         </div>
                                     </div>
                                 </div>
@@ -326,7 +302,7 @@
                                             <span id="q10_slider" class="fw-bold fs-5 ms-2"></span>
                                         </div>
                                         <div class="slidecontainer mt-3 mb-3">
-                                            <input type="range" min="0" max="10" value="<?= $neuromodulation["q10"] ?>" class="slider" id="q10" name="q10" required>
+                                            <input type="range" min="0" max="10" value="0" class="slider" id="q10" name="q10" required>
                                         </div>
                                     </div>
                                 </div>
@@ -338,7 +314,7 @@
                                             <span id="q11_slider" class="fw-bold fs-5 ms-2"></span>
                                         </div>
                                         <div class="slidecontainer mt-3 mb-3">
-                                            <input type="range" min="0" max="10" value="<?= $neuromodulation["q11"] ?>" class="slider" id="q11" name="q11" required>
+                                            <input type="range" min="0" max="10" value="0" class="slider" id="q11" name="q11" required>
                                         </div>
                                     </div>
                                 </div>
@@ -350,7 +326,7 @@
                                             <span id="q12_slider" class="fw-bold fs-5 ms-2"></span>
                                         </div>
                                         <div class="slidecontainer mt-3 mb-3">
-                                            <input type="range" min="0" max="10" value="<?= $neuromodulation["q12"] ?>" class="slider" id="q12" name="q12" required>
+                                            <input type="range" min="0" max="10" value="0" class="slider" id="q12" name="q12" required>
                                         </div>
                                     </div>
                                 </div>
@@ -365,8 +341,13 @@
                                 <div class="card-body">
                                     <label class="form-label fs-4 fw-bold" for="total_score">Total Score: <span id="total_score">0</span> / 110</label>
                                     <input type="hidden" name="total_score" id="total_score_input" value="0">
-                                    <div class="col-12 pt-3">
-                                        <button class="btn btn-success" type="submit" style="width:100%">Update</button>
+                                    <div class="row">
+                                        <div class="col-6 pt-3">
+                                            <button class="btn btn-warning" type="reset" style="width:100%">Reset</button>
+                                        </div>
+                                        <div class="col-6 pt-3">
+                                            <button class="btn btn-success" type="submit" style="width:100%">Submit</button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -379,6 +360,26 @@
     <script>
         var sliders = document.querySelectorAll('.slider');
         var totalOutput = document.getElementById('total_score');
+        var form = document.getElementById('nmod_form');
+        
+        form.addEventListener('reset', () => {
+            // Delay slightly to let the browser apply default values to inputs first
+            setTimeout(() => {
+                sliders.forEach(slider => {
+                    // Clear custom validation errors if applied
+                    slider.setCustomValidity('');
+
+                    slide = document.getElementById(slider.id+'_slider');
+                    if(slider.id ==="q1"){
+                        slide.textContent = slider.value+"%";
+                    } else {
+                        slide.textContent = slider.value;
+                    }
+                    totalOutput.textContent = 0;
+                    
+                })
+            }, 0);
+       });
 
         function updateTotal() {
             var total = 0;
@@ -393,11 +394,20 @@
         sliders.forEach(function(slider) {
             var output = document.getElementById(slider.id + '_slider');
             if (output) {
-                output.innerHTML = slider.value;
+                if (slider.id ==="q1") {
+                    output.innerHTML = slider.value +"%";    
+                } else {
+                    output.innerHTML = slider.value;
+                }
             }
             slider.oninput = function() {
                 if (output) {
-                    output.innerHTML = this.value;
+                    if (slider.id ==="q1") {
+                        output.innerHTML = slider.value +"%";    
+                    } else {
+
+                        output.innerHTML = slider.value;
+                    }
                 }
                 updateTotal();
             };

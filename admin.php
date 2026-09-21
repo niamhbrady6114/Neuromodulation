@@ -1,5 +1,12 @@
 <?php 
 
+    // Report all PHP errors
+    error_reporting(E_ALL);
+    
+    // Display errors on the screen
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+ 
     require_once __DIR__ . '/db.php';  
     
 
@@ -64,7 +71,10 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Neuromodulation</title>
-        <!-- BOOTSTRAP 5 CSS (CDN) -->
+
+        <script src="https://code.jquery.com/jquery-4.0.0.slim.js" integrity="sha256-M+GjhMBfXikM1izMplICCTscIj5hzPCp6uDzaypxtgg=" crossorigin="anonymous"></script>
+        <link href="https://cdn.datatables.net/v/dt/dt-3.0.4/datatables.min.css" rel="stylesheet">
+        <script src="https://cdn.datatables.net/v/dt/dt-3.0.4/datatables.min.js" ></script>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <script src="https://kit.fontawesome.com/7ffc81d928.js" crossorigin="anonymous"></script>
     </head>
@@ -85,31 +95,31 @@
                             <div class="card-header">Admin</div>
                             <div class="card-body"> 
                                 <input type="hidden" name="action" value="delete">
-                                <table class="table table-striped">
+                                <table class="table table-striped" id="results">
                                     <thead>
                                         <tr>
-                                            <td class="text-center">Submission Date</td>
+                                            <td>Submission Date</td>
                                             <td>First Name</td>
                                             <td>Surname</td>
                                             <td class="text-center">Age</td>
-                                            <td class="text-center">Date of Birth</td>
+                                            <td>Date of Birth</td>
                                             <td class="text-center">Total Score</td>
-                                            </td>
+                                            <td style="width:80px;"></td>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <!-- Looping the results -->
                                         <?php foreach($results as $result){ ?> 
                                             <tr>
-                                                <td class="text-center"><?=  $result["submission_date"] ?></td>
+                                                <td data-order="<?=  DateTime::createFromFormat('d/m/Y', $result["submission_date"])->Format('Y-m-d') ?>"><?=  $result["submission_date"] ?></td>
                                                 <td><?=  $result["first_name"] ?></td>
                                                 <td><?=  $result["surname"] ?></td>
                                                 <td class="text-center"><?=  $result["age"] ?></td>
-                                                <td class="text-center"><?=  $result["birth_date"] ?></td>
+                                                <td data-order="<<?=  DateTime::createFromFormat('d/m/Y', $result["birth_date"])->Format('Y-m-d') ?>"><?=  $result["birth_date"] ?></td>
                                                 <td class="text-center"><?=  $result["total_score"] ?></td>
                                                 <td>
-                                                    <a href="/neuromodulation_select.php?action=delete&id=<?=  $result["id"] ?>"><i class="fa-solid fa-trash-can"></i></a>
-                                                    <a href="/neuromodulation_update.php?id=<?=  $result["id"] ?>"><i class="fa-solid fa-pen-to-square"></i></a>
+                                                    <a href="/admin.php?action=delete&id=<?=  $result["id"] ?>"><i class="fa-solid fa-trash-can"></i></a>
+                                                    <a href="/update.php?id=<?=  $result["id"] ?>"><i class="fa-solid fa-pen-to-square"></i></a>
                                                 </td>
                                             </tr>
                                         <?php } ?>
@@ -122,4 +132,8 @@
             </div>
         </div>
     </body>
+
+    <script>
+        new DataTable('#results');
+    </script>
 </html>
